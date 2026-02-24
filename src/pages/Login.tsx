@@ -14,6 +14,14 @@ export const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Check if Supabase is configured
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+      setError('A conexão com o banco de dados não foi configurada. Por favor, configure as variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
+      setLoading(false);
+      return;
+    }
     
     const { error } = await supabase.auth.signInWithPassword({
       email,

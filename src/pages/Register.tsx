@@ -19,7 +19,7 @@ export const Register = () => {
     // Check if Supabase is configured
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
-      setError('A conexão com o banco de dados não foi configurada. Por favor, configure as variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
+      setError('A conexão com o banco de dados não foi configurada. Se você acabou de adicionar as chaves VITE_SUPABASE_URL no painel, por favor recarregue a página (F5) para aplicá-las.');
       setLoading(false);
       return;
     }

@@ -54,8 +54,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', userId)
         .single();
       
-      if (error) throw error;
-      setProfile(data);
+      if (error) {
+        // If the user row doesn't exist yet (e.g. trigger failed or is delayed),
+        // we still want to let them log in. We'll set a basic profile.
+        if (error.code === 'PGRST116') {
+          console.warn('User profile not found in database. Using auth metadata.');
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            setProfile({
+              id: user.id,
+              name: user.user_metadata?.full_name || user.email?.split('@')[0],
+              email: user.email,
+              avatar_url: user.user_metadata?.avatar_url,
+              plan: 'free',
+              reputation_score: 0
+            });
+          }
+        } else {
+          console.error('Error fetching profile:', error);
+        }
+      } else {
+        setProfile(data);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {

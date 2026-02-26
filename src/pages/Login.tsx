@@ -29,7 +29,11 @@ export const Login = () => {
     });
 
     if (error) {
-      setError(error.message);
+      if (error.message === 'Invalid API key') {
+        setError('A chave do Supabase (VITE_SUPABASE_ANON_KEY) está incorreta. Verifique se você copiou a chave "anon public" inteira, sem espaços extras, no painel de Secrets do AI Studio. Depois, aperte F5.');
+      } else {
+        setError(error.message);
+      }
     } else {
       navigate('/dashboard');
     }

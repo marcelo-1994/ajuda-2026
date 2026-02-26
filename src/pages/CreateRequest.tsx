@@ -35,7 +35,11 @@ export const CreateRequest = () => {
 
     setLoading(false);
     if (error) {
-      alert('Erro ao criar pedido: ' + error.message);
+      if (error.message === 'Invalid API key') {
+        alert('Erro ao criar pedido: A chave do Supabase (VITE_SUPABASE_ANON_KEY) está incorreta. Verifique se você copiou a chave "anon public" inteira, sem espaços extras, no painel de Secrets do AI Studio. Depois, aperte F5.');
+      } else {
+        alert('Erro ao criar pedido: ' + error.message);
+      }
     } else {
       navigate('/requests');
     }

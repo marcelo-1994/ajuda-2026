@@ -73,12 +73,20 @@ ALTER TABLE help_requests ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Help requests are viewable by everyone." ON help_requests FOR SELECT USING (true);
 CREATE POLICY "Authenticated users can create help requests." ON help_requests FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own help requests." ON help_requests FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own help requests." ON help_requests FOR DELETE USING (auth.uid() = user_id);
 
 -- Responses
 ALTER TABLE responses ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Responses are viewable by everyone." ON responses FOR SELECT USING (true);
 CREATE POLICY "Authenticated users can create responses." ON responses FOR INSERT WITH CHECK (auth.uid() = responder_id);
 CREATE POLICY "Users can update their own responses." ON responses FOR UPDATE USING (auth.uid() = responder_id);
+CREATE POLICY "Request owners can update responses to accept them." ON responses FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM help_requests 
+    WHERE help_requests.id = responses.request_id 
+    AND help_requests.user_id = auth.uid()
+  )
+);
 
 -- Reviews
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;

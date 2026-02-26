@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { PlusCircle, Clock, CheckCircle2, Star } from 'lucide-react';
+import { Tutorial } from '../components/Tutorial';
 
 export const Dashboard = () => {
   const { user, profile } = useAuth();
@@ -48,6 +49,7 @@ export const Dashboard = () => {
 
   return (
     <div className="max-w-5xl mx-auto">
+      <Tutorial />
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold">Olá, {profile?.name || 'Usuário'}</h1>

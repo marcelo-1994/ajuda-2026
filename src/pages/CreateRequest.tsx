@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
-import { DollarSign, Tag, FileText, Type } from 'lucide-react';
+import { DollarSign, Tag, FileText, Type, AlertCircle } from 'lucide-react';
 
 export const CreateRequest = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [requestCount, setRequestCount] = useState<number | null>(null);
+  const [checkingLimit, setCheckingLimit] = useState(true);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -16,6 +18,24 @@ export const CreateRequest = () => {
     is_paid: false,
     price: '',
   });
+
+  useEffect(() => {
+    const checkLimit = async () => {
+      if (!user) return;
+      
+      const { count, error } = await supabase
+        .from('help_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+      
+      if (!error && count !== null) {
+        setRequestCount(count);
+      }
+      setCheckingLimit(false);
+    };
+    
+    checkLimit();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +64,45 @@ export const CreateRequest = () => {
       navigate('/requests');
     }
   };
+
+  if (checkingLimit) {
+    return (
+      <div className="max-w-2xl mx-auto flex justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  // Check if user reached the limit of 3 requests and is on the free plan
+  const isFreePlan = !profile?.plan || profile.plan === 'free';
+  const userCredits = profile?.credits || 0;
+  const totalAllowed = 3 + userCredits;
+
+  if (isFreePlan && requestCount !== null && requestCount >= totalAllowed) {
+    return (
+      <div className="max-w-2xl mx-auto mt-12">
+        <div className="bg-white dark:bg-zinc-900 border border-red-500/30 p-8 rounded-3xl text-center shadow-2xl">
+          <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="h-10 w-10 text-red-500" />
+          </div>
+          <h2 className="text-3xl font-bold text-zinc-900 dark:text-white mb-4">Limite Atingido</h2>
+          <p className="text-zinc-600 dark:text-zinc-400 text-lg mb-8 max-w-md mx-auto">
+            Você já utilizou seus {totalAllowed} pedidos disponíveis. Para continuar pedindo ajuda ou oferecendo serviços, você precisa adicionar créditos ou fazer um upgrade de plano.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/pricing">
+              <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto px-8">
+                Ver Planos e Créditos
+              </Button>
+            </Link>
+            <Button size="lg" variant="outline" onClick={() => navigate(-1)} className="w-full sm:w-auto px-8">
+              Voltar
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">

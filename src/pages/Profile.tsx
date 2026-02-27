@@ -146,6 +146,12 @@ export const Profile = () => {
                 <span className="text-zinc-400 text-sm">Plano Atual</span>
                 <span className="text-white text-sm font-medium uppercase">{profile.plan}</span>
               </div>
+              {(!profile.plan || profile.plan === 'free') && (
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400 text-sm">Créditos Adicionais</span>
+                  <span className="text-emerald-400 text-sm font-bold">{profile.credits || 0}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -3,20 +3,36 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
-import { Clock, DollarSign, Star, UserCircle, Send, CheckCircle2 } from 'lucide-react';
+import { Clock, DollarSign, Star, UserCircle, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export const RequestDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [request, setRequest] = useState<any>(null);
   const [responses, setResponses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [responseCount, setResponseCount] = useState<number | null>(null);
 
   useEffect(() => {
     fetchRequestDetails();
-  }, [id]);
+    if (user) {
+      checkResponseLimit();
+    }
+  }, [id, user]);
+
+  const checkResponseLimit = async () => {
+    if (!user) return;
+    const { count, error } = await supabase
+      .from('responses')
+      .select('*', { count: 'exact', head: true })
+      .eq('responder_id', user.id);
+    
+    if (!error && count !== null) {
+      setResponseCount(count);
+    }
+  };
 
   const fetchRequestDetails = async () => {
     if (!id) return;
@@ -70,6 +86,7 @@ export const RequestDetails = () => {
     } else {
       setMessage('');
       fetchRequestDetails();
+      checkResponseLimit(); // Update count after responding
     }
   };
 
@@ -210,25 +227,46 @@ export const RequestDetails = () => {
 
       {/* Reply Form */}
       {user && !isOwner && request.status === 'open' && (
-        <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800">
+        <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 mt-8">
           <h3 className="text-lg font-bold mb-4">Oferecer Ajuda</h3>
-          <form onSubmit={handleSendResponse}>
-            <textarea
-              required
-              rows={4}
-              placeholder="Descreva como você pode ajudar com este pedido..."
-              className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow resize-none mb-4"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-            <div className="flex justify-end">
-              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white px-8" disabled={submitting || !message.trim()}>
-                {submitting ? 'Enviando...' : (
-                  <>Enviar Resposta <Send className="ml-2 h-4 w-4" /></>
-                )}
-              </Button>
+          
+          {(!profile?.plan || profile.plan === 'free') && responseCount !== null && responseCount >= (5 + (profile?.credits || 0)) ? (
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 p-6 rounded-2xl text-center">
+              <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-3" />
+              <h4 className="font-bold text-red-800 dark:text-red-400 mb-2">Limite de Respostas Atingido</h4>
+              <p className="text-red-600 dark:text-red-300 text-sm mb-4">
+                Você já utilizou suas {5 + (profile?.credits || 0)} respostas disponíveis. Para continuar oferecendo seus serviços ou ajuda, adicione créditos ou faça um upgrade.
+              </p>
+              <Link to="/pricing">
+                <Button className="bg-red-600 hover:bg-red-700 text-white">
+                  Adicionar Créditos
+                </Button>
+              </Link>
             </div>
-          </form>
+          ) : (
+            <form onSubmit={handleSendResponse}>
+              <textarea
+                required
+                rows={4}
+                placeholder="Descreva como você pode ajudar com este pedido..."
+                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow resize-none mb-4"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
+              <div className="flex justify-between items-center">
+                {(!profile?.plan || profile.plan === 'free') && (
+                  <span className="text-xs text-zinc-500">
+                    Respostas usadas: {responseCount || 0}/{5 + (profile?.credits || 0)}
+                  </span>
+                )}
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 ml-auto" disabled={submitting || !message.trim()}>
+                  {submitting ? 'Enviando...' : (
+                    <>Enviar Resposta <Send className="ml-2 h-4 w-4" /></>
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
       )}
 

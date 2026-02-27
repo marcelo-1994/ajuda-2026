@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
-import { Star, Award, Medal, CheckCircle2, Clock, MessageSquare, Trophy, Edit2, Save, X } from 'lucide-react';
+import { Star, Award, Medal, CheckCircle2, Clock, MessageSquare, Trophy, Edit2, Save, X, Upload, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export const Profile = () => {
@@ -11,6 +11,8 @@ export const Profile = () => {
   const [editBio, setEditBio] = useState('');
   const [editAvatarUrl, setEditAvatarUrl] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!user || !profile) {
     return <div className="text-center py-12 text-zinc-400">Carregando perfil...</div>;
@@ -21,6 +23,39 @@ export const Profile = () => {
     setEditBio(profile.bio || '');
     setEditAvatarUrl(profile.avatar_url || '');
     setIsEditing(true);
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploadingAvatar(true);
+      
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('Você precisa selecionar uma imagem para fazer upload.');
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      
+      setEditAvatarUrl(data.publicUrl);
+    } catch (error: any) {
+      alert('Erro ao fazer upload da imagem. Verifique se o bucket "avatars" existe no Supabase e é público. Erro: ' + error.message);
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleSave = async () => {
@@ -63,12 +98,32 @@ export const Profile = () => {
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-6 pt-12">
           <div className="relative">
             {isEditing ? (
-              <div className="w-32 h-32 rounded-full bg-zinc-800 flex items-center justify-center border-4 border-black shadow-xl overflow-hidden">
+              <div 
+                className="w-32 h-32 rounded-full bg-zinc-800 flex items-center justify-center border-4 border-black shadow-xl overflow-hidden cursor-pointer relative group"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 {editAvatarUrl ? (
-                  <img src={editAvatarUrl} alt="Preview" className="w-full h-full object-cover opacity-50" />
+                  <img src={editAvatarUrl} alt="Preview" className="w-full h-full object-cover opacity-50 group-hover:opacity-30 transition-opacity" />
                 ) : (
-                  <span className="text-zinc-500 text-xs text-center px-2">URL da Imagem</span>
+                  <span className="text-zinc-500 text-xs text-center px-2">Sem Imagem</span>
                 )}
+                <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                  {uploadingAvatar ? (
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 text-white mb-1" />
+                      <span className="text-[10px] text-white font-bold uppercase tracking-wider">Alterar Foto</span>
+                    </>
+                  )}
+                </div>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleAvatarUpload} 
+                  accept="image/*" 
+                  className="hidden" 
+                />
               </div>
             ) : profile.avatar_url ? (
               <img src={profile.avatar_url} alt={profile.name} className="w-32 h-32 rounded-full object-cover border-4 border-black shadow-xl" />
@@ -100,7 +155,7 @@ export const Profile = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-zinc-400 mb-1 text-left">URL da Foto (Avatar)</label>
+                  <label className="block text-xs text-zinc-400 mb-1 text-left">URL da Foto (Opcional)</label>
                   <input
                     type="text"
                     value={editAvatarUrl}
@@ -108,6 +163,7 @@ export const Profile = () => {
                     className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
                     placeholder="https://exemplo.com/foto.jpg"
                   />
+                  <p className="text-[10px] text-zinc-500 mt-1 text-left">Você pode colar um link ou clicar na foto acima para enviar do seu dispositivo.</p>
                 </div>
               </div>
             ) : (

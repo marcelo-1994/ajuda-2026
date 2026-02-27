@@ -121,7 +121,7 @@ export const Home = () => {
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a 
-                href="https://wa.me/559499123751?text=Olá!%20Gostaria%20de%20apoiar%20o%20desenvolvimento%20do%20AJUDA%20PLUS+" 
+                href="https://wa.me/5594991233751?text=Olá!%20Gostaria%20de%20apoiar%20o%20desenvolvimento%20do%20AJUDA%20PLUS+" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto"
@@ -144,7 +144,7 @@ export const Home = () => {
               </Button>
             </div>
             <p className="mt-6 text-sm text-zinc-500">
-              Contato Direto: (94) 99123-751
+              Contato Direto: (94) 99123-3751
             </p>
           </div>
         </div>

@@ -13,6 +13,7 @@ import { Profile } from './pages/Profile';
 import { Pricing } from './pages/Pricing';
 import { Ranking } from './pages/Ranking';
 import { Professionals } from './pages/Professionals';
+import { InstallPrompt } from './components/InstallPrompt';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -25,6 +26,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <InstallPrompt />
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />

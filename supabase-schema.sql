@@ -228,3 +228,37 @@ $$ LANGUAGE plpgsql security definer;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- 10. Community Channels
+CREATE TABLE community_channels (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 11. Community Messages
+CREATE TABLE community_messages (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  channel_id TEXT REFERENCES community_channels(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  text TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- RLS for Community Channels
+ALTER TABLE community_channels ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Community channels are viewable by everyone." ON community_channels FOR SELECT USING (true);
+
+-- RLS for Community Messages
+ALTER TABLE community_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Community messages are viewable by everyone." ON community_messages FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can create community messages." ON community_messages FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Insert default channels
+INSERT INTO community_channels (id, name, description) VALUES
+  ('geral', 'geral', 'Canal para discussões gerais da comunidade'),
+  ('ajuda', 'ajuda-mutua', 'Canal para pedir e oferecer ajuda'),
+  ('vagas', 'vagas-e-freelas', 'Canal para compartilhar vagas e oportunidades'),
+  ('projetos', 'projetos-colab', 'Canal para encontrar parceiros para projetos')
+ON CONFLICT (id) DO NOTHING;

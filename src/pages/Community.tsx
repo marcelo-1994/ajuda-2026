@@ -1,27 +1,184 @@
-import React, { useState } from 'react';
-import { MessageSquare, Hash, Users, Send, Search, Image as ImageIcon, Smile, MoreVertical } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { MessageSquare, Hash, Users, Send, Search, Image as ImageIcon, Smile, MoreVertical, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
+import { supabase } from '../lib/supabase';
 
-const channels = [
-  { id: 'geral', name: 'geral', unread: 0 },
-  { id: 'ajuda', name: 'ajuda-mutua', unread: 3 },
-  { id: 'vagas', name: 'vagas-e-freelas', unread: 0 },
-  { id: 'projetos', name: 'projetos-colab', unread: 12 },
-];
+interface Channel {
+  id: string;
+  name: string;
+  description: string;
+  unread?: number;
+}
 
-const mockMessages = [
-  { id: 1, user: 'João Silva', avatar: 'https://i.pravatar.cc/150?u=1', time: '10:30', text: 'Bom dia pessoal! Alguém manja de React Native?' },
-  { id: 2, user: 'Maria Souza', avatar: 'https://i.pravatar.cc/150?u=2', time: '10:32', text: 'Oi João! Eu trabalho com RN faz uns 2 anos. Qual a dúvida?' },
-  { id: 3, user: 'João Silva', avatar: 'https://i.pravatar.cc/150?u=1', time: '10:35', text: 'Estou com um problema na navegação usando o React Navigation. Posso te mandar DM?' },
-  { id: 4, user: 'Maria Souza', avatar: 'https://i.pravatar.cc/150?u=2', time: '10:36', text: 'Claro, manda lá!' },
-  { id: 5, user: 'Carlos Mendes', avatar: 'https://i.pravatar.cc/150?u=3', time: '11:00', text: 'Galera, acabei de postar um pedido de ajuda de design lá na plataforma. Se alguém puder dar uma olhada 🙏' },
-];
+interface Message {
+  id: string;
+  channel_id: string;
+  user_id: string;
+  text: string;
+  created_at: string;
+  users?: {
+    name: string;
+    avatar_url: string;
+  };
+}
 
 export const Community = () => {
   const { profile } = useAuth();
-  const [activeChannel, setActiveChannel] = useState('geral');
-  const [message, setMessage] = useState('');
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchChannels();
+  }, []);
+
+  useEffect(() => {
+    if (activeChannel) {
+      fetchMessages(activeChannel.id);
+      
+      // Subscribe to new messages
+      const subscription = supabase
+        .channel(`public:community_messages:channel_id=eq.${activeChannel.id}`)
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'community_messages',
+          filter: `channel_id=eq.${activeChannel.id}`
+        }, payload => {
+          // Fetch the user details for the new message
+          const fetchUserDetails = async () => {
+            const { data: userData } = await supabase
+              .from('users')
+              .select('name, avatar_url')
+              .eq('id', payload.new.user_id)
+              .single();
+              
+            const newMsg = {
+              ...payload.new,
+              users: userData
+            } as Message;
+            
+            setMessages(prev => [...prev, newMsg]);
+          };
+          
+          fetchUserDetails();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(subscription);
+      };
+    }
+  }, [activeChannel]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const fetchChannels = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('community_channels')
+        .select('*')
+        .order('name');
+        
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setChannels(data);
+        setActiveChannel(data[0]);
+      } else {
+        // Fallback if no channels exist in DB yet
+        const fallbackChannels = [
+          { id: 'geral', name: 'geral', description: 'Canal para discussões gerais da comunidade' },
+          { id: 'ajuda', name: 'ajuda-mutua', description: 'Canal para pedir e oferecer ajuda' },
+          { id: 'vagas', name: 'vagas-e-freelas', description: 'Canal para compartilhar vagas e oportunidades' },
+          { id: 'projetos', name: 'projetos-colab', description: 'Canal para encontrar parceiros para projetos' }
+        ];
+        setChannels(fallbackChannels);
+        setActiveChannel(fallbackChannels[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching channels:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMessages = async (channelId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('community_messages')
+        .select(`
+          *,
+          users (
+            name,
+            avatar_url
+          )
+        `)
+        .eq('channel_id', channelId)
+        .order('created_at', { ascending: true });
+        
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !profile || !activeChannel) return;
+    
+    setSending(true);
+    try {
+      const { error } = await supabase
+        .from('community_messages')
+        .insert([
+          { 
+            channel_id: activeChannel.id, 
+            user_id: profile.id, 
+            text: newMessage.trim() 
+          }
+        ]);
+        
+      if (error) throw error;
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Erro ao enviar mensagem. Tente novamente.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-12rem)] min-h-[600px]">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto h-[calc(100vh-12rem)] min-h-[600px] flex flex-col md:flex-row gap-6">
@@ -47,9 +204,9 @@ export const Community = () => {
             {channels.map(channel => (
               <button
                 key={channel.id}
-                onClick={() => setActiveChannel(channel.id)}
+                onClick={() => setActiveChannel(channel)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                  activeChannel === channel.id 
+                  activeChannel?.id === channel.id 
                     ? 'bg-indigo-600/20 text-indigo-300 font-medium' 
                     : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
                 }`}
@@ -58,11 +215,11 @@ export const Community = () => {
                   <Hash className="h-4 w-4 opacity-70" />
                   {channel.name}
                 </div>
-                {channel.unread > 0 && (
+                {channel.unread ? (
                   <span className="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                     {channel.unread}
                   </span>
-                )}
+                ) : null}
               </button>
             ))}
           </div>
@@ -76,17 +233,11 @@ export const Community = () => {
           <div className="flex items-center gap-3">
             <Hash className="h-6 w-6 text-zinc-400" />
             <div>
-              <h3 className="font-bold text-white text-lg">{activeChannel}</h3>
-              <p className="text-xs text-zinc-400">Canal para discussões gerais da comunidade</p>
+              <h3 className="font-bold text-white text-lg">{activeChannel?.name || 'Selecione um canal'}</h3>
+              <p className="text-xs text-zinc-400">{activeChannel?.description || ''}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
-              <img src="https://i.pravatar.cc/150?u=1" className="w-8 h-8 rounded-full border-2 border-zinc-900" alt="User" />
-              <img src="https://i.pravatar.cc/150?u=2" className="w-8 h-8 rounded-full border-2 border-zinc-900" alt="User" />
-              <img src="https://i.pravatar.cc/150?u=3" className="w-8 h-8 rounded-full border-2 border-zinc-900" alt="User" />
-              <div className="w-8 h-8 rounded-full border-2 border-zinc-900 bg-zinc-800 flex items-center justify-center text-xs text-white font-medium">+42</div>
-            </div>
             <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white">
               <MoreVertical className="h-5 w-5" />
             </Button>
@@ -95,18 +246,31 @@ export const Community = () => {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-          {mockMessages.map((msg) => (
-            <div key={msg.id} className="flex gap-4 group">
-              <img src={msg.avatar} alt={msg.user} className="w-10 h-10 rounded-full object-cover shrink-0" />
-              <div>
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="font-bold text-white">{msg.user}</span>
-                  <span className="text-xs text-zinc-500">{msg.time}</span>
-                </div>
-                <p className="text-zinc-300 text-sm leading-relaxed">{msg.text}</p>
-              </div>
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-zinc-500">
+              <MessageSquare className="h-12 w-12 mb-4 opacity-20" />
+              <p>Nenhuma mensagem neste canal ainda.</p>
+              <p className="text-sm">Seja o primeiro a enviar uma mensagem!</p>
             </div>
-          ))}
+          ) : (
+            messages.map((msg) => (
+              <div key={msg.id} className="flex gap-4 group">
+                <img 
+                  src={msg.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.users?.name || 'User')}&background=random`} 
+                  alt={msg.users?.name || 'User'} 
+                  className="w-10 h-10 rounded-full object-cover shrink-0" 
+                />
+                <div>
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-bold text-white">{msg.users?.name || 'Usuário Desconhecido'}</span>
+                    <span className="text-xs text-zinc-500">{formatTime(msg.created_at)}</span>
+                  </div>
+                  <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                </div>
+              </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
@@ -116,20 +280,23 @@ export const Community = () => {
               <ImageIcon className="h-5 w-5" />
             </Button>
             <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={`Conversar em #${activeChannel}...`}
-              className="w-full bg-transparent border-none text-white focus:outline-none resize-none py-2 px-2 text-sm max-h-32 min-h-[40px]"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={profile ? `Conversar em #${activeChannel?.name || 'canal'}...` : 'Faça login para enviar mensagens'}
+              disabled={!profile || sending}
+              className="w-full bg-transparent border-none text-white focus:outline-none resize-none py-2 px-2 text-sm max-h-32 min-h-[40px] disabled:opacity-50"
               rows={1}
             />
             <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white shrink-0">
               <Smile className="h-5 w-5" />
             </Button>
             <Button 
-              className={`shrink-0 rounded-xl ${message.trim() ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-white/5 text-zinc-500'}`}
-              disabled={!message.trim()}
+              onClick={handleSendMessage}
+              className={`shrink-0 rounded-xl ${newMessage.trim() && !sending ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-white/5 text-zinc-500'}`}
+              disabled={!newMessage.trim() || !profile || sending}
             >
-              <Send className="h-4 w-4" />
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
         </div>

@@ -1,14 +1,51 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
-import { Star, Award, Medal, CheckCircle2, Clock, MessageSquare, Trophy } from 'lucide-react';
+import { Star, Award, Medal, CheckCircle2, Clock, MessageSquare, Trophy, Edit2, Save, X } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export const Profile = () => {
   const { user, profile, signOut } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [editAvatarUrl, setEditAvatarUrl] = useState('');
+  const [saving, setSaving] = useState(false);
 
   if (!user || !profile) {
     return <div className="text-center py-12 text-zinc-400">Carregando perfil...</div>;
   }
+
+  const handleEditClick = () => {
+    setEditName(profile.name || '');
+    setEditBio(profile.bio || '');
+    setEditAvatarUrl(profile.avatar_url || '');
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    setSaving(true);
+    
+    const { error } = await supabase
+      .from('users')
+      .update({
+        name: editName,
+        bio: editBio,
+        avatar_url: editAvatarUrl,
+      })
+      .eq('id', user.id);
+
+    setSaving(false);
+    
+    if (error) {
+      alert('Erro ao salvar o perfil: ' + error.message);
+    } else {
+      setIsEditing(false);
+      // Reload to update the context profile
+      window.location.reload();
+    }
+  };
 
   const getLevel = (score: number) => {
     return Math.floor(Math.sqrt((score || 0) / 10)) + 1;
@@ -25,44 +62,106 @@ export const Profile = () => {
         
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-6 pt-12">
           <div className="relative">
-            {profile.avatar_url ? (
+            {isEditing ? (
+              <div className="w-32 h-32 rounded-full bg-zinc-800 flex items-center justify-center border-4 border-black shadow-xl overflow-hidden">
+                {editAvatarUrl ? (
+                  <img src={editAvatarUrl} alt="Preview" className="w-full h-full object-cover opacity-50" />
+                ) : (
+                  <span className="text-zinc-500 text-xs text-center px-2">URL da Imagem</span>
+                )}
+              </div>
+            ) : profile.avatar_url ? (
               <img src={profile.avatar_url} alt={profile.name} className="w-32 h-32 rounded-full object-cover border-4 border-black shadow-xl" />
             ) : (
               <div className="w-32 h-32 rounded-full bg-indigo-900 flex items-center justify-center text-indigo-300 font-bold text-4xl border-4 border-black shadow-xl">
                 {profile.name?.charAt(0) || 'U'}
               </div>
             )}
-            <div className="absolute -bottom-2 -right-2 bg-black rounded-full p-1 border border-white/10">
-              <div className="bg-indigo-600 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-[0_0_10px_rgba(79,70,229,0.5)]">
-                L{level}
+            {!isEditing && (
+              <div className="absolute -bottom-2 -right-2 bg-black rounded-full p-1 border border-white/10">
+                <div className="bg-indigo-600 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-[0_0_10px_rgba(79,70,229,0.5)]">
+                  L{level}
+                </div>
               </div>
-            </div>
+            )}
           </div>
           
-          <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center md:justify-start gap-3">
-              {profile.name}
-              {profile.plan === 'pro' && <span className="text-xs uppercase tracking-wider bg-indigo-500 text-white px-2 py-1 rounded-full font-bold">PRO</span>}
-              {profile.plan === 'strategic' && <span className="text-xs uppercase tracking-wider bg-purple-500 text-white px-2 py-1 rounded-full font-bold">VIP</span>}
-            </h1>
-            <p className="text-zinc-400 mb-4">{profile.email}</p>
-            
-            <div className="flex flex-wrap justify-center md:justify-start gap-4">
-              <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-xl border border-white/10">
-                <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
-                <span className="font-bold text-white">{profile.reputation_score || 0}</span>
-                <span className="text-zinc-400 text-sm">Reputação</span>
+          <div className="flex-1 text-center md:text-left w-full">
+            {isEditing ? (
+              <div className="space-y-3 mb-4 max-w-md mx-auto md:mx-0">
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1 text-left">Nome</label>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+                    placeholder="Seu nome"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1 text-left">URL da Foto (Avatar)</label>
+                  <input
+                    type="text"
+                    value={editAvatarUrl}
+                    onChange={(e) => setEditAvatarUrl(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+                    placeholder="https://exemplo.com/foto.jpg"
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center md:justify-start gap-3">
+                  {profile.name}
+                  {profile.plan === 'pro' && <span className="text-xs uppercase tracking-wider bg-indigo-500 text-white px-2 py-1 rounded-full font-bold">PRO</span>}
+                  {profile.plan === 'strategic' && <span className="text-xs uppercase tracking-wider bg-purple-500 text-white px-2 py-1 rounded-full font-bold">VIP</span>}
+                </h1>
+                <p className="text-zinc-400 mb-4">{profile.email}</p>
+                
+                <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                  <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-xl border border-white/10">
+                    <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
+                    <span className="font-bold text-white">{profile.reputation_score || 0}</span>
+                    <span className="text-zinc-400 text-sm">Reputação</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           
           <div className="flex flex-col gap-3 w-full md:w-auto mt-6 md:mt-0">
-            <Button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500/50 shadow-[0_0_15px_rgba(79,70,229,0.5)]">
-              Editar Perfil
-            </Button>
-            <Button variant="outline" className="w-full border-white/10 text-white hover:bg-white/10" onClick={signOut}>
-              Sair da Conta
-            </Button>
+            {isEditing ? (
+              <>
+                <Button 
+                  onClick={handleSave} 
+                  disabled={saving}
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.5)]"
+                >
+                  {saving ? 'Salvando...' : <><Save className="w-4 h-4 mr-2" /> Salvar</>}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsEditing(false)}
+                  disabled={saving}
+                  className="w-full border-white/10 text-white hover:bg-white/10"
+                >
+                  <X className="w-4 h-4 mr-2" /> Cancelar
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  onClick={handleEditClick}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500/50 shadow-[0_0_15px_rgba(79,70,229,0.5)]"
+                >
+                  <Edit2 className="w-4 h-4 mr-2" /> Editar Perfil
+                </Button>
+                <Button variant="outline" className="w-full border-white/10 text-white hover:bg-white/10" onClick={signOut}>
+                  Sair da Conta
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -128,7 +227,15 @@ export const Profile = () => {
         <div className="space-y-8">
           <div className="glass-panel p-6 rounded-3xl">
             <h2 className="text-xl font-bold text-white mb-4">Sobre Mim</h2>
-            {profile.bio ? (
+            {isEditing ? (
+              <textarea
+                value={editBio}
+                onChange={(e) => setEditBio(e.target.value)}
+                rows={4}
+                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 resize-none text-sm"
+                placeholder="Conte um pouco sobre você, suas habilidades e o que gosta de fazer..."
+              />
+            ) : profile.bio ? (
               <p className="text-zinc-400 text-sm leading-relaxed">{profile.bio}</p>
             ) : (
               <p className="text-zinc-500 text-sm italic">Nenhuma biografia adicionada.</p>

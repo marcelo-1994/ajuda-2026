@@ -1,8 +1,8 @@
-import React from 'react';
-import { Link2, Webhook, Github, MessageCircle, CheckCircle, ExternalLink, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link2, Webhook, Github, MessageCircle, CheckCircle, ExternalLink, RefreshCw, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
-const integrations = [
+const initialIntegrations = [
   {
     id: 'whatsapp',
     name: 'WhatsApp Business',
@@ -38,6 +38,45 @@ const integrations = [
 ];
 
 export const Integrations = () => {
+  const [integrations, setIntegrations] = useState(initialIntegrations);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  const handleConnect = (id: string) => {
+    setLoadingId(id);
+    
+    // Simulando uma chamada de API ou redirecionamento OAuth
+    setTimeout(() => {
+      setIntegrations(prev => 
+        prev.map(integration => 
+          integration.id === id 
+            ? { ...integration, status: 'connected' } 
+            : integration
+        )
+      );
+      setLoadingId(null);
+      
+      if (id === 'stripe') {
+        window.open('https://dashboard.stripe.com/register', '_blank');
+      } else if (id === 'github') {
+        window.open('https://github.com/login', '_blank');
+      } else if (id === 'discord') {
+        window.open('https://discord.com/login', '_blank');
+      }
+    }, 1500);
+  };
+
+  const handleDisconnect = (id: string) => {
+    if (window.confirm('Tem certeza que deseja desconectar esta integração?')) {
+      setIntegrations(prev => 
+        prev.map(integration => 
+          integration.id === id 
+            ? { ...integration, status: 'disconnected' } 
+            : integration
+        )
+      );
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-10 text-center md:text-left">
@@ -52,10 +91,10 @@ export const Integrations = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {integrations.map((integration) => (
-          <div key={integration.id} className={`glass-panel p-6 rounded-3xl border ${integration.color} transition-all hover:shadow-[0_0_20px_rgba(79,70,229,0.1)]`}>
+          <div key={integration.id} className={`glass-panel p-6 rounded-3xl border ${integration.color} transition-all hover:shadow-[0_0_20px_rgba(79,70,229,0.1)] flex flex-col`}>
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-black/40 flex items-center justify-center border border-white/5 shadow-inner">
+                <div className="w-16 h-16 rounded-2xl bg-black/40 flex items-center justify-center border border-white/5 shadow-inner shrink-0">
                   {integration.icon}
                 </div>
                 <div>
@@ -75,22 +114,36 @@ export const Integrations = () => {
               </div>
             </div>
             
-            <p className="text-zinc-400 text-sm leading-relaxed mb-6 h-10">
+            <p className="text-zinc-400 text-sm leading-relaxed mb-6 flex-1">
               {integration.description}
             </p>
             
-            <div className="flex items-center justify-between pt-4 border-t border-white/5">
-              <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-white">
+            <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
+              <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-white px-0">
                 Ver Documentação <ExternalLink className="h-3 w-3 ml-1" />
               </Button>
               
               {integration.status === 'connected' ? (
-                <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-300 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30">
+                <Button 
+                  onClick={() => handleDisconnect(integration.id)}
+                  variant="outline" 
+                  size="sm" 
+                  className="border-zinc-700 text-zinc-300 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
+                >
                   Desconectar
                 </Button>
               ) : (
-                <Button size="sm" className="bg-white/10 hover:bg-indigo-600 text-white border border-white/10 hover:border-indigo-500">
-                  Conectar <RefreshCw className="h-3 w-3 ml-2" />
+                <Button 
+                  onClick={() => handleConnect(integration.id)}
+                  disabled={loadingId === integration.id}
+                  size="sm" 
+                  className="bg-white/10 hover:bg-indigo-600 text-white border border-white/10 hover:border-indigo-500 min-w-[110px]"
+                >
+                  {loadingId === integration.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>Conectar <RefreshCw className="h-3 w-3 ml-2" /></>
+                  )}
                 </Button>
               )}
             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Star, Award, Medal, CheckCircle2, Clock, MessageSquare, Trophy, Edit2, Save, X, Upload, Loader2 } from 'lucide-react';
@@ -13,6 +13,52 @@ export const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [stats, setStats] = useState({
+    responsesCount: 0,
+    completedRequests: 0,
+    isTop10: false,
+  });
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchStats = async () => {
+      try {
+        // Fetch responses count
+        const { count: responsesCount } = await supabase
+          .from('responses')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        // Fetch completed requests count
+        const { count: completedRequests } = await supabase
+          .from('requests')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('status', 'completed');
+
+        // Check if user is in top 10
+        const { data: topUsers } = await supabase
+          .from('users')
+          .select('id')
+          .order('reputation_score', { ascending: false })
+          .limit(10);
+
+        const isTop10 = topUsers?.some(u => u.id === user.id) || false;
+
+        setStats({
+          responsesCount: responsesCount || 0,
+          completedRequests: completedRequests || 0,
+          isTop10,
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, [user]);
 
   if (!user || !profile) {
     return <div className="text-center py-12 text-zinc-400">Carregando perfil...</div>;
@@ -89,6 +135,11 @@ export const Profile = () => {
   const level = getLevel(profile.reputation_score);
   const nextLevelScore = Math.pow(level, 2) * 10;
   const progress = Math.min(100, ((profile.reputation_score || 0) / nextLevelScore) * 100);
+
+  const hasPrimeiraAjuda = stats.responses > 0 || stats.requests > 0;
+  const has5Estrelas = (profile.reputation_score || 0) >= 50;
+  const hasComunicador = stats.responses >= 10;
+  const hasTop10 = (profile.reputation_score || 0) >= 100;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -247,34 +298,34 @@ export const Profile = () => {
             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
               <Medal className="h-5 w-5 text-amber-400" /> Suas Conquistas
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-white/5 border border-white/10">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mb-3">
-                  <CheckCircle2 className="h-6 w-6 text-emerald-400" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className={`flex flex-col items-center text-center p-6 rounded-2xl bg-[#1a1a1a] border border-white/5 transition-all ${stats.completedRequests > 0 ? 'hover:bg-white/10 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] cursor-pointer' : 'opacity-50 grayscale'}`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${stats.completedRequests > 0 ? 'bg-[#0f3d2e]' : 'bg-zinc-800'}`}>
+                  <CheckCircle2 className={`h-8 w-8 ${stats.completedRequests > 0 ? 'text-[#10b981]' : 'text-zinc-500'}`} />
                 </div>
-                <span className="text-xs font-bold text-white mb-1">Primeira Ajuda</span>
-                <span className="text-[10px] text-zinc-500">Concluiu 1 pedido</span>
+                <span className="text-base font-bold text-white mb-1">Primeira Ajuda</span>
+                <span className="text-xs text-zinc-500">{stats.completedRequests > 0 ? `Concluiu ${stats.completedRequests} pedido(s)` : 'Nenhum pedido concluído'}</span>
               </div>
-              <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-white/5 border border-white/10">
-                <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mb-3">
-                  <Star className="h-6 w-6 text-amber-400" />
+              <div className={`flex flex-col items-center text-center p-6 rounded-2xl bg-[#1a1a1a] border border-white/5 transition-all ${profile.reputation_score >= 50 ? 'hover:bg-white/10 hover:shadow-[0_0_15px_rgba(251,191,36,0.2)] cursor-pointer' : 'opacity-50 grayscale'}`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${profile.reputation_score >= 50 ? 'bg-[#3d2e0f]' : 'bg-zinc-800'}`}>
+                  <Star className={`h-8 w-8 ${profile.reputation_score >= 50 ? 'text-[#f59e0b]' : 'text-zinc-500'}`} />
                 </div>
-                <span className="text-xs font-bold text-white mb-1">5 Estrelas</span>
-                <span className="text-[10px] text-zinc-500">Recebeu avaliação máxima</span>
+                <span className="text-base font-bold text-white mb-1">5 Estrelas</span>
+                <span className="text-xs text-zinc-500">{profile.reputation_score >= 50 ? 'Recebeu avaliação máxima' : 'Alcance 50 de reputação'}</span>
               </div>
-              <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-white/5 border border-white/10 opacity-50 grayscale">
-                <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center mb-3">
-                  <MessageSquare className="h-6 w-6 text-indigo-400" />
+              <div className={`flex flex-col items-center text-center p-6 rounded-2xl bg-[#1a1a1a] border border-white/5 transition-all ${stats.responsesCount >= 10 ? 'hover:bg-white/10 hover:shadow-[0_0_15px_rgba(99,102,241,0.2)] cursor-pointer' : 'opacity-50 grayscale'}`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${stats.responsesCount >= 10 ? 'bg-indigo-900/40' : 'bg-zinc-800'}`}>
+                  <MessageSquare className={`h-8 w-8 ${stats.responsesCount >= 10 ? 'text-indigo-400' : 'text-zinc-500'}`} />
                 </div>
-                <span className="text-xs font-bold text-white mb-1">Comunicador</span>
-                <span className="text-[10px] text-zinc-500">10 respostas dadas</span>
+                <span className="text-base font-bold text-white mb-1">Comunicador</span>
+                <span className="text-xs text-zinc-500">{stats.responsesCount >= 10 ? `${stats.responsesCount} respostas dadas` : `${stats.responsesCount}/10 respostas`}</span>
               </div>
-              <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-white/5 border border-white/10 opacity-50 grayscale">
-                <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center mb-3">
-                  <Trophy className="h-6 w-6 text-yellow-400" />
+              <div className={`flex flex-col items-center text-center p-6 rounded-2xl bg-[#1a1a1a] border border-white/5 transition-all ${stats.isTop10 ? 'hover:bg-white/10 hover:shadow-[0_0_15px_rgba(234,179,8,0.2)] cursor-pointer' : 'opacity-50 grayscale'}`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${stats.isTop10 ? 'bg-yellow-900/40' : 'bg-zinc-800'}`}>
+                  <Trophy className={`h-8 w-8 ${stats.isTop10 ? 'text-yellow-400' : 'text-zinc-500'}`} />
                 </div>
-                <span className="text-xs font-bold text-white mb-1">Top 10</span>
-                <span className="text-[10px] text-zinc-500">Top 10 do mês</span>
+                <span className="text-base font-bold text-white mb-1">Top 10</span>
+                <span className="text-xs text-zinc-500">{stats.isTop10 ? 'Você está no Top 10!' : 'Alcance o Top 10 do mês'}</span>
               </div>
             </div>
           </div>

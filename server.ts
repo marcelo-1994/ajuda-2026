@@ -5,6 +5,7 @@ import Stripe from "stripe";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import jwt from "jsonwebtoken";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +17,7 @@ const PORT = 3000;
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2025-02-24.acacia",
+  apiVersion: "2025-02-24.acacia" as any,
 });
 
 app.use(cors());
@@ -68,7 +69,32 @@ app.post(
 // Body parser for other routes
 app.use(express.json());
 
-app.post("/api/create-checkout-session", async (req, res) => {
+// JWT Verification Middleware
+const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access denied. No token provided.' });
+  }
+
+  const jwtSecret = process.env.SUPABASE_JWT_SECRET;
+  
+  if (!jwtSecret) {
+    console.warn('SUPABASE_JWT_SECRET is not configured. Skipping token verification for development.');
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, jwtSecret);
+    (req as any).user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid token.' });
+  }
+};
+
+app.post("/api/create-checkout-session", authenticateToken, async (req, res) => {
   const { priceId, userId } = req.body;
 
   if (!process.env.STRIPE_SECRET_KEY) {

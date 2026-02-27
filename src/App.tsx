@@ -17,6 +17,7 @@ import { Marketplace } from './pages/Marketplace';
 import { Community } from './pages/Community';
 import { Integrations } from './pages/Integrations';
 import { InstallPrompt } from './components/InstallPrompt';
+import { BetaNotice } from './components/BetaNotice';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -29,6 +30,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <BetaNotice />
         <InstallPrompt />
         <Routes>
           <Route path="/" element={<Layout />}>

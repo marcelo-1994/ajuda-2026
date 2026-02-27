@@ -41,12 +41,21 @@ export const Login = () => {
   };
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
-    await supabase.auth.signInWithOAuth({
+    setError(null);
+    const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo: `${window.location.origin}/dashboard`,
       },
     });
+
+    if (error) {
+      if (error.message.includes('provider is not enabled')) {
+        setError(`O login com ${provider} ainda não foi ativado no painel do Supabase. Você precisa ir em Authentication > Providers no Supabase e ativar o ${provider}.`);
+      } else {
+        setError(error.message);
+      }
+    }
   };
 
   return (

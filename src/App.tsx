@@ -13,6 +13,9 @@ import { Profile } from './pages/Profile';
 import { Pricing } from './pages/Pricing';
 import { Ranking } from './pages/Ranking';
 import { Professionals } from './pages/Professionals';
+import { Marketplace } from './pages/Marketplace';
+import { Community } from './pages/Community';
+import { Integrations } from './pages/Integrations';
 import { InstallPrompt } from './components/InstallPrompt';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -37,6 +40,7 @@ export default function App() {
             <Route path="pricing" element={<Pricing />} />
             <Route path="ranking" element={<Ranking />} />
             <Route path="professionals" element={<Professionals />} />
+            <Route path="marketplace" element={<Marketplace />} />
             
             <Route path="dashboard" element={
               <ProtectedRoute>
@@ -51,6 +55,16 @@ export default function App() {
             <Route path="profile" element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="community" element={
+              <ProtectedRoute>
+                <Community />
+              </ProtectedRoute>
+            } />
+            <Route path="integrations" element={
+              <ProtectedRoute>
+                <Integrations />
               </ProtectedRoute>
             } />
           </Route>

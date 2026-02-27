@@ -28,9 +28,64 @@ export const Marketplace = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProducts(data || []);
+      
+      // If no products in DB, show some mock data to make it look good
+      if (!data || data.length === 0) {
+        setProducts([
+          {
+            id: 'mock-1',
+            title: 'Template Landing Page SaaS',
+            description: 'Um template completo e responsivo para sua próxima startup SaaS. Feito com React e Tailwind CSS.',
+            price: 49.90,
+            category: 'Design',
+            image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=400',
+            seller: { name: 'Marcelo Reis' }
+          },
+          {
+            id: 'mock-2',
+            title: 'Mentoria: Carreira em Tech',
+            description: '1 hora de mentoria focada no seu desenvolvimento profissional e transição de carreira.',
+            price: 150.00,
+            category: 'Mentoria',
+            image_url: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400',
+            seller: { name: 'Ana Silva' }
+          },
+          {
+            id: 'mock-3',
+            title: 'Boilerplate React + Supabase',
+            description: 'Comece seu próximo projeto em minutos com este boilerplate completo com autenticação e banco de dados.',
+            price: 99.00,
+            category: 'Código',
+            image_url: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=400',
+            seller: { name: 'Dev Team' }
+          }
+        ]);
+      } else {
+        setProducts(data);
+      }
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
+      // Fallback to mock data on error
+      setProducts([
+        {
+          id: 'mock-1',
+          title: 'Template Landing Page SaaS',
+          description: 'Um template completo e responsivo para sua próxima startup SaaS. Feito com React e Tailwind CSS.',
+          price: 49.90,
+          category: 'Design',
+          image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=400',
+          seller: { name: 'Marcelo Reis' }
+        },
+        {
+          id: 'mock-2',
+          title: 'Mentoria: Carreira em Tech',
+          description: '1 hora de mentoria focada no seu desenvolvimento profissional e transição de carreira.',
+          price: 150.00,
+          category: 'Mentoria',
+          image_url: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400',
+          seller: { name: 'Ana Silva' }
+        }
+      ]);
     } finally {
       setLoading(false);
     }

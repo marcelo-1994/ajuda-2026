@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Star, Search, Filter, Plus, X, Loader2 } from 'lucide-react';
+import { ShoppingBag, Star, Search, Filter, Plus, X, Loader2, Zap } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,6 +21,9 @@ export const Marketplace = () => {
   const [imagePreview, setImagePreview] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const platformFee = 10; // 10% developer fee
+
+  const [showHighlightModal, setShowHighlightModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const fetchProducts = async () => {
     try {
@@ -103,6 +106,17 @@ export const Marketplace = () => {
   const handleBuy = (product: any) => {
     const message = encodeURIComponent(`Olá! Tenho interesse no produto "${product.title}" que vi no Marketplace do AJUDAÍ por R$ ${product.price}. Como podemos prosseguir?`);
     window.open(`https://wa.me/?text=${message}`, '_blank');
+  };
+
+  const handleHighlight = (product: any) => {
+    setSelectedProduct(product);
+    setShowHighlightModal(true);
+  };
+
+  const confirmHighlight = () => {
+    const message = encodeURIComponent(`Olá! Gostaria de pagar R$ 10,00 para destacar meu produto "${selectedProduct?.title}" no Marketplace do AJUDAÍ por 7 dias.`);
+    window.open(`https://wa.me/5594991233751?text=${message}`, '_blank');
+    setShowHighlightModal(false);
   };
 
   const filteredProducts = products.filter(p => 
@@ -192,12 +206,23 @@ export const Marketplace = () => {
                   </div>
                 </div>
                 
-                <Button 
-                  onClick={() => handleBuy(product)}
-                  className="w-full bg-white/5 hover:bg-indigo-600 text-white border border-white/10 hover:border-indigo-500 transition-colors"
-                >
-                  Comprar Agora
-                </Button>
+                <div className="flex gap-2 mt-auto">
+                  <Button 
+                    onClick={() => handleBuy(product)}
+                    className="flex-1 bg-white/5 hover:bg-indigo-600 text-white border border-white/10 hover:border-indigo-500 transition-colors"
+                  >
+                    Comprar
+                  </Button>
+                  {user && user.id === product.seller_id && (
+                    <Button 
+                      onClick={() => handleHighlight(product)}
+                      className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-3"
+                      title="Destacar Produto (R$ 10,00)"
+                    >
+                      <Zap className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -338,6 +363,49 @@ export const Marketplace = () => {
                 {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Publicar Produto'}
               </Button>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Highlight Modal */}
+      {showHighlightModal && selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-amber-500/30 rounded-3xl p-6 w-full max-w-md relative shadow-[0_0_50px_rgba(245,158,11,0.1)]">
+            <button 
+              onClick={() => setShowHighlightModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            
+            <div className="w-16 h-16 bg-amber-500/20 rounded-2xl flex items-center justify-center mb-6 border border-amber-500/30 mx-auto">
+              <Zap className="h-8 w-8 text-amber-400" />
+            </div>
+            
+            <h2 className="text-2xl font-bold text-white mb-2 text-center">Destacar Produto</h2>
+            <p className="text-zinc-400 text-center mb-6">
+              Aumente suas vendas destacando <strong className="text-white">"{selectedProduct.title}"</strong> no topo do Marketplace por 7 dias.
+            </p>
+            
+            <div className="bg-black/50 border border-white/10 rounded-2xl p-4 mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-zinc-300">Destaque por 7 dias</span>
+                <span className="text-white font-bold">R$ 10,00</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-zinc-500">Aumento estimado de views</span>
+                <span className="text-emerald-400 font-medium">+300%</span>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={confirmHighlight}
+              className="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold shadow-[0_0_20px_rgba(245,158,11,0.4)]"
+            >
+              Pagar R$ 10,00 via WhatsApp
+            </Button>
+            <p className="text-xs text-zinc-500 text-center mt-4">
+              O pagamento é processado de forma segura. O destaque será ativado após a confirmação.
+            </p>
           </div>
         </div>
       )}

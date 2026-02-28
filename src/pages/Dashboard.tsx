@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { PlusCircle, Clock, CheckCircle2, Star } from 'lucide-react';
 import { Tutorial } from '../components/Tutorial';
+import { InviteFriends } from '../components/InviteFriends';
 
 export const Dashboard = () => {
   const { user, profile } = useAuth();
@@ -121,6 +122,8 @@ export const Dashboard = () => {
           <p className="text-zinc-500 text-sm">Nenhuma resposta recente encontrada.</p>
         </div>
       </div>
+
+      <InviteFriends />
     </div>
   );
 };

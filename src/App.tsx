@@ -21,6 +21,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { Invite } from './pages/Invite';
 import { InstallPrompt } from './components/InstallPrompt';
 import { BetaNotice } from './components/BetaNotice';
+import { QuickAccess } from './components/QuickAccess';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -35,6 +36,7 @@ export default function App() {
       <BrowserRouter>
         <BetaNotice />
         <InstallPrompt />
+        <QuickAccess />
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />

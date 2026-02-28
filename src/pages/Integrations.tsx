@@ -85,7 +85,7 @@ export const Integrations = () => {
           Integrações
         </h1>
         <p className="text-zinc-400 max-w-2xl">
-          Conecte o AJUDA+ com suas ferramentas favoritas para automatizar seu fluxo de trabalho, receber notificações e gerenciar pagamentos.
+          Conecte o Nova Publica com suas ferramentas favoritas para automatizar seu fluxo de trabalho, receber notificações e gerenciar pagamentos.
         </p>
       </div>
 

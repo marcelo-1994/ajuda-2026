@@ -4,7 +4,7 @@ import { Button } from './ui/Button';
 
 const steps = [
   {
-    title: "Bem-vindo ao AJUDA PLUS+! 🚀",
+    title: "Bem-vindo ao Nova Publica! 🚀",
     description: "Estamos muito felizes em ter você aqui. Vamos fazer um tour rápido para você entender como a plataforma funciona e como pode começar a ajudar (ou ser ajudado!).",
     icon: <Sparkles className="w-12 h-12 text-indigo-500" />
   },
@@ -36,7 +36,7 @@ export const Tutorial = () => {
 
   useEffect(() => {
     // Check if the user has already seen the tutorial
-    const hasSeenTutorial = localStorage.getItem('ajudaplus_tutorial_seen');
+    const hasSeenTutorial = localStorage.getItem('novapublica_tutorial_seen');
     if (!hasSeenTutorial) {
       // Small delay to let the dashboard load first
       const timer = setTimeout(() => setIsOpen(true), 1000);
@@ -46,7 +46,7 @@ export const Tutorial = () => {
 
   const handleClose = () => {
     setIsOpen(false);
-    localStorage.setItem('ajudaplus_tutorial_seen', 'true');
+    localStorage.setItem('novapublica_tutorial_seen', 'true');
   };
 
   const handleNext = () => {

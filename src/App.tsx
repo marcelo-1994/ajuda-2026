@@ -16,6 +16,7 @@ import { Professionals } from './pages/Professionals';
 import { Marketplace } from './pages/Marketplace';
 import { Community } from './pages/Community';
 import { Integrations } from './pages/Integrations';
+import { Timeline } from './pages/Timeline';
 import { InstallPrompt } from './components/InstallPrompt';
 import { BetaNotice } from './components/BetaNotice';
 
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="register" element={<Register />} />
             <Route path="requests" element={<Requests />} />
             <Route path="requests/:id" element={<RequestDetails />} />
+            <Route path="timeline" element={<Timeline />} />
             <Route path="pricing" element={<Pricing />} />
             <Route path="ranking" element={<Ranking />} />
             <Route path="professionals" element={<Professionals />} />

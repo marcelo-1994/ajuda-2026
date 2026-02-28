@@ -74,7 +74,7 @@ export const Marketplace = () => {
   };
 
   const handleBuy = (product: any) => {
-    const message = encodeURIComponent(`Olá! Tenho interesse no produto "${product.title}" que vi no Marketplace do AJUDA+ por R$ ${product.price}. Como podemos prosseguir?`);
+    const message = encodeURIComponent(`Olá! Tenho interesse no produto "${product.title}" que vi no Marketplace do Nova Publica por R$ ${product.price}. Como podemos prosseguir?`);
     window.open(`https://wa.me/?text=${message}`, '_blank');
   };
 

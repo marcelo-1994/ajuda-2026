@@ -47,8 +47,8 @@ export default defineConfig(({mode}) => {
           ]
         },
         manifest: {
-          name: 'AJUDA PLUS+',
-          short_name: 'AJUDA+',
+          name: 'Nova Publica',
+          short_name: 'Nova Publica',
           description: 'Plataforma de ajuda e serviços',
           theme_color: '#4f46e5',
           background_color: '#ffffff',

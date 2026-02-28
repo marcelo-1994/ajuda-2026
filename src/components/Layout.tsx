@@ -17,11 +17,12 @@ export const Layout = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight z-50 relative">
             <HeartHandshake className="h-6 w-6 text-indigo-400" />
-            <span className="text-gradient">AJUDA+</span>
+            <span className="text-gradient">Nova Publica</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
             <Link to="/requests" className="text-zinc-300 hover:text-white transition-colors">Explorar Pedidos</Link>
+            <Link to="/timeline" className="text-zinc-300 hover:text-white transition-colors">Timeline</Link>
             <Link to="/professionals" className="text-zinc-300 hover:text-white transition-colors">Profissionais</Link>
             <Link to="/marketplace" className="text-zinc-300 hover:text-white transition-colors">Marketplace</Link>
             <Link to="/ranking" className="text-zinc-300 hover:text-white transition-colors">Ranking</Link>
@@ -70,6 +71,7 @@ export const Layout = () => {
         <div className="fixed inset-0 z-40 bg-black/95 backdrop-blur-xl md:hidden flex flex-col pt-24 px-6 pb-6 overflow-y-auto">
           <nav className="flex flex-col gap-6 text-lg font-medium">
             <Link to="/requests" onClick={() => setIsMobileMenuOpen(false)} className="text-zinc-300 hover:text-white transition-colors">Explorar Pedidos</Link>
+            <Link to="/timeline" onClick={() => setIsMobileMenuOpen(false)} className="text-zinc-300 hover:text-white transition-colors">Timeline</Link>
             <Link to="/professionals" onClick={() => setIsMobileMenuOpen(false)} className="text-zinc-300 hover:text-white transition-colors">Profissionais</Link>
             <Link to="/marketplace" onClick={() => setIsMobileMenuOpen(false)} className="text-zinc-300 hover:text-white transition-colors">Marketplace</Link>
             <Link to="/ranking" onClick={() => setIsMobileMenuOpen(false)} className="text-zinc-300 hover:text-white transition-colors">Ranking</Link>
@@ -121,7 +123,7 @@ export const Layout = () => {
       </main>
       <footer className="border-t border-white/10 py-8 mt-16 relative z-10">
         <div className="container mx-auto px-4 text-center text-zinc-500 text-sm">
-          &copy; {new Date().getFullYear()} AJUDA+. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()} Nova Publica. Todos os direitos reservados.
         </div>
       </footer>
     </div>

@@ -116,12 +116,12 @@ export const Home = () => {
             
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Apoie este Projeto</h2>
             <p className="text-zinc-300 text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
-              O AJUDA PLUS+ foi desenvolvido com muito carinho para conectar pessoas. Se esta plataforma foi útil para você, considere apoiar o desenvolvedor ou compartilhar com seus amigos!
+              O Nova Publica foi desenvolvido com muito carinho para conectar pessoas. Se esta plataforma foi útil para você, considere apoiar o desenvolvedor ou compartilhar com seus amigos!
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a 
-                href="https://wa.me/5594991233751?text=Olá!%20Gostaria%20de%20apoiar%20o%20desenvolvimento%20do%20AJUDA%20PLUS+" 
+                href="https://wa.me/5594991233751?text=Olá!%20Gostaria%20de%20apoiar%20o%20desenvolvimento%20do%20Nova%20Publica" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto"
@@ -154,7 +154,7 @@ export const Home = () => {
       <section className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-[2.5rem] p-12 text-center text-white max-w-5xl mx-auto w-full mb-12 shadow-[0_0_40px_rgba(79,70,229,0.3)]">
         <h2 className="text-3xl md:text-4xl font-bold mb-6">Pronto para fazer a diferença?</h2>
         <p className="text-indigo-100 text-lg mb-8 max-w-2xl mx-auto">
-          Junte-se ao AJUDA+ hoje mesmo. É grátis para começar e você pode evoluir para planos profissionais quando quiser.
+          Junte-se ao Nova Publica hoje mesmo. É grátis para começar e você pode evoluir para planos profissionais quando quiser.
         </p>
         <Link to="/register">
           <Button size="lg" className="bg-white text-indigo-600 hover:bg-zinc-100 text-lg h-14 px-10">

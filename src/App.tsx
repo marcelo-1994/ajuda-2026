@@ -18,6 +18,7 @@ import { Community } from './pages/Community';
 import { Integrations } from './pages/Integrations';
 import { Timeline } from './pages/Timeline';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { Invite } from './pages/Invite';
 import { InstallPrompt } from './components/InstallPrompt';
 import { BetaNotice } from './components/BetaNotice';
 
@@ -75,6 +76,11 @@ export default function App() {
             <Route path="admin" element={
               <ProtectedRoute>
                 <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="invite" element={
+              <ProtectedRoute>
+                <Invite />
               </ProtectedRoute>
             } />
           </Route>

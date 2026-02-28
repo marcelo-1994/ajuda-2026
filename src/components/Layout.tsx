@@ -27,6 +27,11 @@ export const Layout = () => {
             <Link to="/marketplace" className="text-zinc-300 hover:text-white transition-colors">Marketplace</Link>
             <Link to="/ranking" className="text-zinc-300 hover:text-white transition-colors">Ranking</Link>
             <Link to="/pricing" className="text-zinc-300 hover:text-white transition-colors">Planos</Link>
+            {user && (
+              <Link to="/invite" className="text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1 font-bold">
+                🎁 Indique e Ganhe
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center gap-4">
@@ -80,6 +85,9 @@ export const Layout = () => {
             {user && (
               <>
                 <div className="h-px bg-white/10 my-2"></div>
+                <Link to="/invite" onClick={() => setIsMobileMenuOpen(false)} className="text-emerald-400 hover:text-emerald-300 transition-colors font-bold">
+                  🎁 Indique e Ganhe
+                </Link>
                 <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="text-zinc-300 hover:text-white transition-colors">
                   Dashboard
                 </Link>

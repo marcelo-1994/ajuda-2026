@@ -39,7 +39,7 @@ export const BetaNotice = () => {
             <Rocket className="h-8 w-8 text-indigo-400" />
           </div>
           
-          <h2 className="text-2xl font-bold text-white mb-2">Bem-vindo ao Nova Publica!</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Bem-vindo ao AJUDAÍ!</h2>
           
           <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-6 border border-amber-500/20">
             <AlertTriangle className="h-3 w-3" />

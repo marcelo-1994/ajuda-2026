@@ -155,7 +155,7 @@ export const Timeline = () => {
     <div className="max-w-3xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Tempo Real (Timeline)</h1>
-        <p className="text-zinc-400">Acompanhe o que está acontecendo na comunidade Nova Publica agora.</p>
+        <p className="text-zinc-400">Acompanhe o que está acontecendo na comunidade AJUDAÍ agora.</p>
       </div>
 
       <div className="relative border-l border-white/10 ml-4 md:ml-6 space-y-8 pb-8">

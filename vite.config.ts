@@ -47,8 +47,8 @@ export default defineConfig(({mode}) => {
           ]
         },
         manifest: {
-          name: 'Nova Publica',
-          short_name: 'Nova Publica',
+          name: 'AJUDAÍ',
+          short_name: 'AJUDAÍ',
           description: 'Plataforma de ajuda e serviços',
           theme_color: '#4f46e5',
           background_color: '#ffffff',

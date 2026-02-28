@@ -1,4 +1,4 @@
--- Supabase Schema for Nova Publica
+-- Supabase Schema for AJUDAÍ
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

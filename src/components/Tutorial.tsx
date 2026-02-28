@@ -4,7 +4,7 @@ import { Button } from './ui/Button';
 
 const steps = [
   {
-    title: "Bem-vindo ao Nova Publica! 🚀",
+    title: "Bem-vindo ao AJUDAÍ! 🚀",
     description: "Estamos muito felizes em ter você aqui. Vamos fazer um tour rápido para você entender como a plataforma funciona e como pode começar a ajudar (ou ser ajudado!).",
     icon: <Sparkles className="w-12 h-12 text-indigo-500" />
   },

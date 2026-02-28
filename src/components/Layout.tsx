@@ -17,7 +17,7 @@ export const Layout = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight z-50 relative">
             <HeartHandshake className="h-6 w-6 text-indigo-400" />
-            <span className="text-gradient">Nova Publica</span>
+            <span className="text-gradient">AJUDAÍ</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
@@ -123,7 +123,7 @@ export const Layout = () => {
       </main>
       <footer className="border-t border-white/10 py-8 mt-16 relative z-10">
         <div className="container mx-auto px-4 text-center text-zinc-500 text-sm">
-          &copy; {new Date().getFullYear()} Nova Publica. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()} AJUDAÍ. Todos os direitos reservados.
         </div>
       </footer>
     </div>

@@ -48,12 +48,12 @@ export const Requests = () => {
   return (
     <div className="max-w-3xl mx-auto px-4">
       <div className="flex flex-col items-center text-center mb-8 mt-4">
-        <h1 className="text-4xl font-bold text-white mb-3">Nova Publica</h1>
+        <h1 className="text-4xl font-bold text-white mb-3">AJUDAÍ</h1>
         <p className="text-zinc-400 text-lg mb-8">Ajude quem precisa ou encontre quem pode te ajudar.</p>
         
         <Link to="/create-request" className="w-full sm:w-auto">
           <Button className="w-full sm:w-auto bg-white hover:bg-zinc-200 text-black font-medium py-6 px-8 rounded-xl flex items-center justify-center gap-2 text-lg shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-            <Plus className="h-5 w-5" /> Nova Publicação
+            <Plus className="h-5 w-5" /> Novo Pedido
           </Button>
         </Link>
       </div>

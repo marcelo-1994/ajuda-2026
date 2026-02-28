@@ -17,7 +17,10 @@ export const Marketplace = () => {
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('Design');
   const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const platformFee = 10; // 10% developer fee
 
   const fetchProducts = async () => {
     try {
@@ -41,19 +44,41 @@ export const Marketplace = () => {
     fetchProducts();
   }, []);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     
     try {
       setSubmitting(true);
+      
+      let finalImageUrl = imageUrl || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=400';
+      
+      // If we had Supabase Storage configured, we would upload the file here.
+      // For now, if they selected a file, we'll use the base64 preview as the image URL
+      // Note: In a real production app, storing base64 in the database is not recommended due to size limits.
+      if (imagePreview) {
+        finalImageUrl = imagePreview;
+      }
+
       const { error } = await supabase.from('products').insert([
         {
           title,
           description,
           price: parseFloat(price),
           category,
-          image_url: imageUrl || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=400',
+          image_url: finalImageUrl,
           seller_id: user.id
         }
       ]);
@@ -65,6 +90,8 @@ export const Marketplace = () => {
       setDescription('');
       setPrice('');
       setImageUrl('');
+      setImageFile(null);
+      setImagePreview('');
       fetchProducts();
     } catch (error: any) {
       alert('Erro ao adicionar produto: ' + error.message + '\n\nCertifique-se de ter criado a tabela "products" no Supabase.');
@@ -155,9 +182,14 @@ export const Marketplace = () => {
                     <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
                     <span className="text-white font-medium text-sm">5.0</span>
                   </div>
-                  <span className="text-lg font-bold text-emerald-400">
-                    R$ {Number(product.price).toFixed(2).replace('.', ',')}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-emerald-400 block">
+                      R$ {Number(product.price).toFixed(2).replace('.', ',')}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 block">
+                      Taxa da plataforma: {platformFee}%
+                    </span>
+                  </div>
                 </div>
                 
                 <Button 
@@ -240,14 +272,62 @@ export const Marketplace = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">URL da Imagem (Opcional)</label>
-                <input 
-                  type="url" 
-                  value={imageUrl}
-                  onChange={e => setImageUrl(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
-                  placeholder="https://exemplo.com/imagem.jpg"
-                />
+                <label className="block text-sm font-medium text-zinc-300 mb-1">Foto do Produto</label>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-4">
+                    {imagePreview ? (
+                      <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10 shrink-0">
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        <button 
+                          type="button"
+                          onClick={() => { setImageFile(null); setImagePreview(''); }}
+                          className="absolute top-1 right-1 bg-black/60 rounded-full p-1 hover:bg-red-500/80 transition-colors"
+                        >
+                          <X className="w-3 h-3 text-white" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-xl bg-black/50 border border-white/10 border-dashed flex items-center justify-center shrink-0">
+                        <ShoppingBag className="w-8 h-8 text-zinc-600" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                        id="product-image"
+                      />
+                      <label 
+                        htmlFor="product-image"
+                        className="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-medium text-white transition-colors w-full mb-2"
+                      >
+                        Escolher Foto
+                      </label>
+                      <input 
+                        type="url" 
+                        value={imageUrl}
+                        onChange={e => setImageUrl(e.target.value)}
+                        disabled={!!imagePreview}
+                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500 text-sm disabled:opacity-50"
+                        placeholder="Ou cole a URL da imagem..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 flex items-start gap-3">
+                <div className="bg-indigo-500/20 p-2 rounded-lg shrink-0">
+                  <Star className="w-5 h-5 text-indigo-400" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-indigo-300 mb-1">Taxa do Desenvolvedor</h4>
+                  <p className="text-xs text-indigo-200/70 leading-relaxed">
+                    Uma taxa de {platformFee}% será aplicada sobre o valor das vendas para manutenção da plataforma AJUDAÍ.
+                  </p>
+                </div>
               </div>
 
               <Button 

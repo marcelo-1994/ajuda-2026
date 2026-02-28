@@ -17,6 +17,7 @@ import { Marketplace } from './pages/Marketplace';
 import { Community } from './pages/Community';
 import { Integrations } from './pages/Integrations';
 import { Timeline } from './pages/Timeline';
+import { AdminDashboard } from './pages/AdminDashboard';
 import { InstallPrompt } from './components/InstallPrompt';
 import { BetaNotice } from './components/BetaNotice';
 
@@ -69,6 +70,11 @@ export default function App() {
             <Route path="integrations" element={
               <ProtectedRoute>
                 <Integrations />
+              </ProtectedRoute>
+            } />
+            <Route path="admin" element={
+              <ProtectedRoute>
+                <AdminDashboard />
               </ProtectedRoute>
             } />
           </Route>
